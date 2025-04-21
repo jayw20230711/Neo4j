@@ -1,0 +1,303 @@
+GDS versions (2.0+)
+===================
+
+// First Create a Named Graph Projection
+CALL gds.graph.project(
+'my-graph',                    //graph name
+'User',                        //node label
+'FRIENDS_WITH', 		// relationship type
+{relationshipProperties: {}}
+)
+
+-------
+// see file "4_CALL gds.graph.project.jpg" for output
+
+run GDS ..  (below is what I got after running "Run Single Algorithm" with my selected settings - your case could be different!!!)
+
+If the Neo4j Browser doesn't automatically open, you can copy/paste the following command into the Neo4j Browser:
+
+:play neuler/user-content-e5c46242-2e1f-4d36-ac59-084813268a2a.html
+
+
+OR you can reproduce the algorithm run by running the following code fragments:
+
+//A named graph is created in memory and remains there until it is explicitly deleted. Multiple algorithms can be run against a single named graph.
+
+		:use neo4j;
+
+		:param limit => ( 43);
+		:param config => ({
+		  relationshipWeightProperty: null
+		});
+		:param graphConfig => ({
+		  nodeProjection: 'User',
+		  relationshipProjection: {
+		    relType: {
+		      type: 'FRIENDS_WITH',
+		      orientation: 'REVERSE',       //NATURAL (outgoing), REVERSE (incoming), or UNDIRECTED.
+		      properties: {}
+		    }
+		  }
+		});
+		:param communityNodeLimit => ( 10);
+		:param generatedName => ('in-memory-graph-1745104497253');
+
+		CALL gds.graph.project($generatedName, $graphConfig.nodeProjection, $graphConfig.relationshipProjection, {});
+
+		CALL gds.degree.stream($generatedName, $config) YIELD nodeId, score
+		WITH gds.util.asNode(nodeId) AS node, score
+		RETURN node, score
+		ORDER BY score DESC
+		LIMIT toInteger($limit);
+
+-----
+
+//Run Degree Centrality (Most Connected Users)
+CALL gds.degree.stream('my-graph')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS user, score AS friends_count
+ORDER BY score DESC
+
+
+user	friends_count
+"Hero"	2.0
+"Dunn"	2.0
+"Clive"	2.0
+"Sue"	1.0
+"Chi"	1.0
+"Thor"	1.0
+"Hicks"	1.0
+"Devin"	1.0
+"Kate"	1.0
+"Klein"	0.0
+Started streaming 10 records after 7 ms and completed after 10 ms.
+
+
+----------
+// List All Projected Graphs
+
+
+CALL gds.graph.list()     //  output -> "CALL gds.graph.list().json"
+
+// List All Projected Graphs
+CALL gds.graph.list()
+YIELD graphName, nodeCount, relationshipCount
+RETURN graphName, nodeCount, relationshipCount
+
+graphName				nodeCount	relationshipCount
+"my-graph"				10		12
+"in-memory-graph-1745105718114"		10		24
+
+--------
+
+// Check a Specific Graph's Details
+
+CALL gds.graph.list('my-graph')  // Replace 'my-graph' with your graph name
+YIELD graphName, nodeLabels, relationshipTypes, schema
+
+
+// ---
+Key Columns Returned
+Column			Description
+graphName		Name you assigned during projection
+nodeCount		Total nodes in the graph
+relationshipCount	Total relationships
+nodeLabels		Labels included (e.g., ['User'])
+relationshipTypes	Relationship types (e.g., ['FRIENDS_WITH'])
+//---
+
+
+---------------
+
+// If You Forgot the Graph Name
+CALL gds.graph.list() 
+YIELD graphName
+RETURN graphName
+
+
+------------
+
+// Drop Unused Graphs
+CALL gds.graph.drop('in-memory-graph-1745105718114')  // Free up memory
+
+
+-----------
+
+Example Workflow
+==================
+
+//First project a graph:
+
+CALL gds.graph.project(
+  'social-network',
+  'User',
+  'FRIENDS_WITH'
+)
+
+
+// Verify it exists:
+
+CALL gds.graph.list('social-network')
+
+
+// Use it in algorithms:
+
+CALL gds.degree.stream('social-network')
+
+
+--------------------
+
+ more CIPHER queries
+ ====================
+
+// propery keys   - age
+
+MATCH (n) WHERE (n.age) IS NOT NULL 
+RETURN DISTINCT "node" as entity, n.age AS age LIMIT 25 
+UNION ALL 
+MATCH ()-[r]-() WHERE (r.age) IS NOT NULL 
+RETURN DISTINCT "relationship" AS entity, r.age AS age LIMIT 25
+
+
+entity	age
+"node"	20
+"node"	25
+
+
+// Interests
+MATCH (n) WHERE (n.interests) IS NOT NULL 
+RETURN DISTINCT "node" as entity, n.interests AS interests LIMIT 25 
+UNION ALL 
+MATCH ()-[r]-() WHERE (r.interests) IS NOT NULL 
+RETURN DISTINCT "relationship" AS entity, r.interests AS interests LIMIT 25
+
+entity	interests
+"node"	["music", "movies"]
+"node"	["sports"]
+"node"	[]
+
+
+-----
+CALL gds.graph.project(
+  'user_friends_graph',
+  'User',
+  'FRIENDS_WITH'
+)
+YIELD graphName, nodeCount, relationshipCount
+
+CALL gds.degree.stream(
+  'user_friends_graph',
+  { orientation: 'NATURAL' }
+)
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS user, score AS friends_count
+ORDER BY score DESC
+
+user	friends_count
+"Hero"	2.0
+"Dunn"	2.0
+"Clive"	2.0
+"Sue"	1.0
+"Chi"	1.0
+"Thor"	1.0
+"Hicks"	1.0
+"Devin"	1.0
+"Kate"	1.0
+"Klein"	0.0
+
+-------------
+
+//Named Graph Approach (Recommended - works in all GDS versions)
+// Step 1: Create the in-memory graph projection
+CALL gds.graph.project(
+  'user_friends_graph',
+  'User',
+  'FRIENDS_WITH'
+);
+
+// Step 2: Run degree centrality on the named graph
+CALL gds.degree.stream('user_friends_graph')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS user, score AS friends_count
+ORDER BY score DESC;
+
+user	friends_count
+"Hero"	2.0
+"Dunn"	2.0
+"Clive"	2.0
+"Sue"	1.0
+"Chi"	1.0
+"Thor"	1.0
+"Hicks"	1.0
+"Devin"	1.0
+"Kate"	1.0
+"Klein"	0.0
+
+---------------
+
+// Recommend Friends via Common Interests
+MATCH (u:User {name: "Hero"})-[:LIKES]->(i:Interest)<-[:LIKES]-(potential_friend:User)
+WHERE NOT (u)-[:FRIENDS_WITH]->(potential_friend)
+RETURN potential_friend.name AS recommendation, collect(i.name) AS shared_interests
+
+++ since above query did not give any results I modify the graph using Cipher as follows:
+
+// chi exist
+MATCH (u:User {name:"Chi"}) SET u.age = 22, u.interests = ["movies", "music"] RETURN u
+
+// if chi does not exist
+MERGE (u:User {name: "Chi"})
+SET u.id = 3,  // Include if needed        // SET replaces existing properties 
+    u.age = 22,
+    u.interests = ["movies", "music"]
+RETURN u
+
+//Add Without Overwrite: Use += for arrays:
+MATCH (u:User {name: "Chi"})
+SET u.interests = coalesce(u.interests, []) + ["movies", "music"]
+
+
+//
+MATCH (n) WHERE (n.interests) <> []
+RETURN DISTINCT n.name as name,  n.interests AS interests LIMIT 25
+
+name	interests
+"Hero"	["music", "movies"]
+"Dunn"	["sports"]
+"Chi"	["movies", "music"]
+
+
+// set "chi" likes ["movies", "music"]  - this will create a one node for music and movies
+MERGE (u:User {name: "Chi"})
+MERGE (i:Interest {name: "movies", "music"})
+CREATE (u)-[:LIKES]->(i)
+
+++ now check the graph for added "LIKES"
+
+//
+MERGE (u:User {name: "Chi"})
+MERGE (i:Interest {name: "movies"})
+CREATE (u)-[:LIKES]->(i)
+
+//
+MERGE (u:User {name: "Chi"})
+MERGE (i:Interest {name: "music"})
+CREATE (u)-[:LIKES]->(i)
+
+
+// NOW rerun recommendation
+MATCH (u:User {name: "Hero"})-[:LIKES]->(i:Interest)<-[:LIKES]-(potential_friend:User)
+WHERE NOT (u)-[:FRIENDS_WITH]->(potential_friend)
+RETURN potential_friend.name AS recommendation, collect(i.name) AS shared_interests
+
+recommendation	shared_interests
+"Chi"	["music", "music"]
+
+
+
+
+
+
+
+
+

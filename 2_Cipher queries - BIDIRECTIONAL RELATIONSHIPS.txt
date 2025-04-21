@@ -1,0 +1,275 @@
+u1 - u2  [BIDIRECTIONAL FRIENDSHIP]
+==============================================
+
+neo4j>  MATCH p=()-[r:FRIENDS_WITH2]->() RETURN p LIMIT 25
+
+
+-----
+//Find All Users
+
+MATCH (u:User2) RETURN u.name, u.id
+
+u.name	u.id
+"Hero"	0
+"Dunn"	1
+"Sue"	2
+"Chi"	3
+"Thor"	4
+"Clive"	5
+"Hicks"	6
+"Devin"	7
+"Kate"	8
+"Klein"	9
+
+
+--------------
+//Find a User by ID
+
+MATCH (u:User2 {id: 0}) RETURN u.name
+
+u.name
+"Hero"
+
+-----------
+//Count All Users
+
+MATCH (u:User2) RETURN COUNT(u) AS total_users
+
+total_usesrs
+10
+
+
+----
+// Find all friends of "Hero"
+MATCH (hero:User2 {name: "Hero"})-[:FRIENDS_WITH2]->(friend)
+RETURN friend.name
+
+friend.name
+"Dunn"
+"Sue"
+
+
+MATCH (u:User2 {name: "Hero"})-[:FRIENDS_WITH2]->(friend)
+RETURN friend.name AS friend_name
+
+Output:
+
+friend_name
+Dunn
+Sue
+
+
+// Find mutual friends between two users (e.g., "Dunn" and "Sue")
+MATCH (dunn:User2 {name: "Dunn"})-[:FRIENDS_WITH2]->(mutual)<-[:FRIENDS_WITH2]-(sue:User2 {name: "Sue"})
+RETURN mutual.name AS mutual_friend
+
+mutual_friend
+"Hero"
+"Chi"
+
+//Find Friends-of-Friends (2nd Degree Connections)
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*2]->(fof) RETURN DISTINCT fof.name
+
+fof.name
+"Sue"
+"Chi"
+
+//removed DISTINCT
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*2]->(fof) RETURN DISTINCT fof.name
+
+fof.name
+"Sue"
+"Chi"
+"Chi"
+
+
+// Find Friends-of-Friends (3rd Degree Connections)
+MATCH (u:User2 {name: "Hero"})-[:FRIENDS_WITH2*3]->(fof) RETURN DISTINCT fof.name
+
+fof.name
+"Sue"
+"Hero"
+"Dunn"
+"Chi"
+"Thor""
+
+
+//removed DISTINCT
+MATCH (u:User2 {name: "Hero"})-[:FRIENDS_WITH2*3]->(fof) RETURN fof.name
+
+fof.name
+"Sue"
+"Hero"
+"Dunn"
+"Chi"
+"Dunn"
+"Sue"
+"Thor"
+"Dunn"
+"Hero"
+"Sue"
+"Chi"
+"Dunn"
+"Sue"
+"Thor"
+
+--------------
+
+//Find the shortest path between two users (e.g., "Hero" and "Klein")
+
+MATCH (a:User2 {name: "Hero"}), (b:User2 {name: "Klein"})
+MATCH path = shortestPath((a)-[:FRIENDS_WITH2*]-(b))
+RETURN [node IN nodes(path) | node.name] AS path
+
+path
+["Hero", "Dunn", "Chi", "Thor", "Clive", "Hicks", "Kate", "Klein"]
+
+//
+MATCH path = shortestPath((hero:User2 {name: "Hero"})-[*]-(klein:User2 {name: "Klein"}))
+RETURN [node IN nodes(path) | node.name] AS path_names
+
+path_names
+["Hero", "Dunn", "Chi", "Thor", "Clive", "Hicks", "Kate", "Klein"]
+
+
+// :FRIENDS_WITH2*
+MATCH path = shortestPath((hero:User2 {name: "Hero"})-[:FRIENDS_WITH2*]-(klein:User2 {name: "Klein"}))
+RETURN [node IN nodes(path) | node.name] AS path_names
+
+path_names
+["Hero", "Dunn", "Chi", "Thor", "Clive", "Hicks", "Kate", "Klein"]
+
+
+-------------
+
+Neo4j Browser Visualization
+Open the Neo4j Browser (http://localhost:7687).
+
+//Run a query to display the entire graph:
+MATCH (u:User)-[r:FRIENDS_WITH]->(f:User)
+RETURN u, r, f
+
+-------------
+
+//Detect Isolated Users (No Friends)
+MATCH (u:User2) 
+WHERE NOT (u)-[:FRIENDS_WITH2]-()        //PatternExpressions are not allowed to introduce new variables
+RETURN u.name
+
+// consider one direction
+MATCH (u:User2) 
+WHERE NOT (u)-[:FRIENDS_WITH2]->()        // not reverse the friendship direction - someone to Klein
+RETURN u.name
+
+
+// both direction friendship 
+MATCH (klein:User2 {name: "Klein"})-[:FRIENDS_WITH2]-(friend)
+RETURN friend.name
+
+friend.name
+"Kate"
+"Kate"
+
+
+// one direction - no friends
+MATCH (klein:User2 {name: "Klein"})-[:FRIENDS_WITH2]->(friend)    
+RETURN friend.name
+
+friend.name
+"Kate"
+
+
+----------
+
+//Most Popular Users (Degree Centrality)  - one direction only
+MATCH (u:User2)-[:FRIENDS_WITH2]->(friend)
+RETURN u.name, COUNT(friend) AS friend_count
+ORDER BY friend_count DESC
+
+
+u.name	friend_count
+"Dunn"	3
+"Sue"	3
+"Chi"	3
+"Clive"	3
+"Kate"	3
+"Hero"	2
+"Thor"	2
+"Hicks"	2
+"Devin"	2
+"Klein"	1
+
+//BIDIRECTIONAL -  counts doubled
+MATCH (u:User2)-[:FRIENDS_WITH2]-(friend)
+RETURN u.name, COUNT(friend) AS friend_count
+ORDER BY friend_count DESC
+
+u.name	friend_count
+"Dunn"	6
+"Sue"	6
+"Chi"	6
+"Clive"	6
+"Kate"	6
+"Hero"	4
+"Thor"	4
+"Hicks"	4
+"Devin"	4
+"Klein"	2
+
+
+//Friend Recommendations (Common Friends)
+// one direction ONLY
+MATCH (u:User2 {name: "Hero"})-[:FRIENDS_WITH2]->(friend)-[:FRIENDS_WITH2]->(recommendation)        WHERE NOT (u)-[:FRIENDS_WITH2]->(recommendation) AND (u) <> (recommendation)                          RETURN recommendation.name, COUNT(friend) as common_friends                                              ORDER BY common_friends
+
+recommendation.name	common_friends
+"Chi"			   2
+
+//BIDIRECTIONAL
+MATCH (u:User2 {name: "Hero"})-[:FRIENDS_WITH2]-(friend)-[:FRIENDS_WITH2]-(recommendation)                  
+WHERE NOT (u)-[:FRIENDS_WITH2]-(recommendation) AND (u) <> (recommendation)                                   
+RETURN recommendation.name, COUNT(friend) as common_friends                                                
+ORDER BY common_friends
+
+
+recommendation.name	common_friends
+"Chi"	                    8
+
+
+// Add a New User
+CREATE (:User2 {id: 10, name: "Alex"})
+
+Added 1 label, created 1 node, set 2 properties, completed after 4 ms.
+
+//Add a New Friendship  - ADD BIRECTIONAL RELATIONSHIP
+MATCH (a:User2 {name: "Hero"}), (b:User2 {name:"Alex"})                                                        
+CREATE (a)-[:FRIENDS_WITH2]->(b), (b)-[:FRIENDS_WITH2]->(a)
+
+Created 2 relationships, completed after 8 ms
+
+//Remove a Friendship
+MATCH (a:User2 {name: "Hero"})-[r:FRIENDS_WITH2]-(b:User2 {name: "Dunn"}) 
+DELETE r
+
+Deleted 2 relationships, completed after 7 ms.
+
+// Indexing for Faster Queries
+CREATE INDEX FOR (u:User2) ON (u.id, u.name)
+
+Added 1 index, completed after 4 ms.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

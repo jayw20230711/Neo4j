@@ -1,0 +1,79 @@
+﻿[
+  {
+    "graphName": "in-memory-graph-1745105718114",
+    "database": "neo4j",
+    "databaseLocation": "local",
+    "memoryUsage": "",
+    "sizeInBytes": -1,
+    "nodeCount": 10,
+    "relationshipCount": 24,
+    "configuration": {
+      "relationshipProjection": {
+        "relType": {
+          "aggregation": "DEFAULT",
+          "orientation": "UNDIRECTED",
+          "indexInverse": false,
+          "properties": {
+
+          },
+          "type": "FRIENDS_WITH"
+        }
+      },
+      "readConcurrency": 4,
+      "relationshipProperties": {
+
+      },
+      "nodeProperties": {
+
+      },
+      "jobId": "f3a01b22-7e1d-4aaf-8ae3-5565889f3b75",
+      "nodeProjection": {
+        "User": {
+          "label": "User",
+          "properties": {
+
+          }
+        }
+      },
+      "logProgress": true,
+      "validateRelationships": false,
+      "sudo": false
+    },
+    "density": 0.26666666666666666,
+    "creationTime": "2025-04-19T19:36:56.459824100-04:00[America/New_York]",
+    "modificationTime": "2025-04-19T19:36:56.459824100-04:00[America/New_York]",
+    "schema": {
+      "graphProperties": {
+
+      },
+      "nodes": {
+        "User": {
+
+        }
+      },
+      "relationships": {
+        "relType": {
+
+        }
+      }
+    },
+    "schemaWithOrientation": {
+      "graphProperties": {
+
+      },
+      "nodes": {
+        "User": {
+
+        }
+      },
+      "relationships": {
+        "relType": {
+          "direction": "UNDIRECTED",
+          "properties": {
+
+          }
+        }
+      }
+    }
+  }
+]
