@@ -1,0 +1,422 @@
+[
+  {
+    "value": {
+      "Account": {
+        "count": 25,
+        "relationships": {
+          "HAS_OPPORTUNITY": {
+            "count": 0,
+            "properties": {},
+            "direction": "out",
+            "labels": [
+              "Opportunity"
+            ]
+          },
+          "HAS_CASE": {
+            "count": 0,
+            "properties": {},
+            "direction": "out",
+            "labels": [
+              "Case"
+            ]
+          },
+          "BELONGS_TO_ACCOUNT": {
+            "count": 31,
+            "properties": {},
+            "direction": "in",
+            "labels": [
+              "Contact"
+            ]
+          }
+        },
+        "type": "node",
+        "properties": {
+          "accountId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "createdDate": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "accountName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "accountType": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "rating": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "industry": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "accountOwner": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "annualRevenue": {
+            "existence": false,
+            "type": "INTEGER",
+            "indexed": false,
+            "unique": false
+          },
+          "numberOfEmployees": {
+            "existence": false,
+            "type": "INTEGER",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      },
+      "CaseOwner": {
+        "count": 25,
+        "relationships": {
+          "ASSIGNED_TO": {
+            "count": 30,
+            "properties": {},
+            "direction": "in",
+            "labels": [
+              "Case"
+            ]
+          }
+        },
+        "type": "node",
+        "properties": {
+          "ownerId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "name": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      },
+      "HAS_OPPORTUNITY": {
+        "count": 26,
+        "type": "relationship",
+        "properties": {}
+      },
+      "HAS_CASE": {
+        "count": 30,
+        "type": "relationship",
+        "properties": {}
+      },
+      "BELONGS_TO_ACCOUNT": {
+        "count": 31,
+        "type": "relationship",
+        "properties": {}
+      },
+      "Opportunity": {
+        "count": 30,
+        "relationships": {
+          "HAS_OPPORTUNITY": {
+            "count": 26,
+            "properties": {},
+            "direction": "in",
+            "labels": [
+              "Account"
+            ]
+          }
+        },
+        "type": "node",
+        "properties": {
+          "closeDate": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "opportunityId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "amount": {
+            "existence": false,
+            "type": "INTEGER",
+            "indexed": false,
+            "unique": false
+          },
+          "stageName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "opportunityName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "opportunityOwner": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "probability": {
+            "existence": false,
+            "type": "INTEGER",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      },
+      "Lead": {
+        "count": 20,
+        "relationships": {},
+        "type": "node",
+        "properties": {
+          "leadOwner": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "lastName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "firstName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "industry": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "company": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "leadId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "status": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      },
+      "ASSIGNED_TO": {
+        "count": 30,
+        "type": "relationship",
+        "properties": {}
+      },
+      "REPORTED_BY": {
+        "count": 30,
+        "type": "relationship",
+        "properties": {}
+      },
+      "Contact": {
+        "count": 31,
+        "relationships": {
+          "BELONGS_TO_ACCOUNT": {
+            "count": 0,
+            "properties": {},
+            "direction": "out",
+            "labels": [
+              "Account"
+            ]
+          },
+          "REPORTED_BY": {
+            "count": 30,
+            "properties": {},
+            "direction": "in",
+            "labels": [
+              "Case"
+            ]
+          }
+        },
+        "type": "node",
+        "properties": {
+          "lastName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "firstName": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "contactId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "leadSource": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "contactOwner": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "title": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "email": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      },
+      "Case": {
+        "count": 30,
+        "relationships": {
+          "ASSIGNED_TO": {
+            "count": 0,
+            "properties": {},
+            "direction": "out",
+            "labels": [
+              "CaseOwner"
+            ]
+          },
+          "HAS_CASE": {
+            "count": 30,
+            "properties": {},
+            "direction": "in",
+            "labels": [
+              "Account"
+            ]
+          },
+          "REPORTED_BY": {
+            "count": 0,
+            "properties": {},
+            "direction": "out",
+            "labels": [
+              "Contact"
+            ]
+          }
+        },
+        "type": "node",
+        "properties": {
+          "reason": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "createdDate": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "closedDate": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "subject": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "caseNumber": {
+            "existence": false,
+            "type": "INTEGER",
+            "indexed": false,
+            "unique": false
+          },
+          "caseId": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": true,
+            "unique": false
+          },
+          "priority": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "type": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          },
+          "status": {
+            "existence": false,
+            "type": "STRING",
+            "indexed": false,
+            "unique": false
+          }
+        },
+        "labels": [
+
+        ]
+      }
+    }
+  }
+]
