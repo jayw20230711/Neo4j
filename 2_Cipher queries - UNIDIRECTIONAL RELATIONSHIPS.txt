@@ -1,0 +1,250 @@
+u1 -> u2  [NOT BIDIRECTIONAL FRIENDSHIP]
+==============================================
+
+neo4j>  MATCH p=()-[r:FRIENDS_WITH]->() RETURN p LIMIT 25
+
+
+-----
+//Find All Users
+
+MATCH (u:User) RETURN u.name, u.id
+
+u.name	u.id
+"Hero"	0
+"Dunn"	1
+"Sue"	2
+"Chi"	3
+"Thor"	4
+"Clive"	5
+"Hicks"	6
+"Devin"	7
+"Kate"	8
+"Klein"	9
+
+
+--------------
+//Find a User by ID
+
+MATCH (u:User {id: 0}) RETURN u.name
+
+u.name
+"Hero"
+
+-----------
+//Count All Users
+
+MATCH (u:User) RETURN COUNT(u) AS total_users
+
+total_usesrs
+10
+
+
+----
+// Find all friends of "Hero"
+MATCH (hero:User {name: "Hero"})-[:FRIENDS_WITH]->(friend)
+RETURN friend.name
+
+friend.name
+"Dunn"
+"Sue
+
+
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH]->(friend)
+RETURN friend.name AS friend_name
+
+friend_name
+Dunn
+Sue
+
+
+// Find mutual friends between two users (e.g., "Dunn" and "Sue")
+MATCH (dunn:User {name: "Dunn"})-[:FRIENDS_WITH]->(mutual)<-[:FRIENDS_WITH]-(sue:User {name: "Sue"})
+RETURN mutual.name AS mutual_friend
+
+mutual_friend
+"Chi"
+
+
+//Find Friends-of-Friends (2nd Degree Connections)
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*2]->(fof) RETURN DISTINCT fof.name
+
+fof.name
+"Sue"
+"Chi"
+
+// removed DISTINCT
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*2]->(fof) RETURN fof.name
+
+fof.name
+"Sue"
+"Chi"
+"Chi"
+
+
+// Find Friends-of-Friends (3rd Degree Connections)
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*3]->(fof) RETURN DISTINCT fof.name
+
+fof.name
+"Chi"
+"Thor"
+
+
+//Rremoved DISTICT
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH*3]->(fof) RETURN fof.name
+
+fof.name
+"Chi"
+"Thor"
+"Thor"
+
+
+--------------
+
+//Find the shortest path between two users (e.g., "Hero" and "Klein")
+
+MATCH (a:User {name: "Hero"}), (b:User {name: "Klein"})
+MATCH path = shortestPath((a)-[:FRIENDS_WITH*]-(b))
+RETURN [node IN nodes(path) | node.name] AS path
+
+path
+["Hero", "Dunn", "Chi", "Thor", "Clive", "Hicks", "Kate", "Klein"]
+
+//
+MATCH path = shortestPath((hero:User {name: "Hero"})-[*]-(klein:User {name: "Klein"}))
+RETURN [node IN nodes(path) | node.name] AS path_names
+
+
+path_names
+["Hero", "Dunn", "Chi", "Thor", "Clive", "Hicks", "Kate", "Klein"]
+
+-------------
+
+Neo4j Browser Visualization
+Open the Neo4j Browser (http://localhost:7687).
+
+//Run a query to display the entire graph:
+MATCH (u:User)-[r:FRIENDS_WITH]->(f:User)
+RETURN u, r, f
+
+-------------
+
+//Detect Isolated Users (No Friends)
+MATCH (u:User) 
+WHERE NOT (u)-[:FRIENDS_WITH]-()        //PatternExpressions are not allowed to introduce new variables
+RETURN u.name
+
+// consider one direction
+MATCH (u:User) 
+WHERE NOT (u)-[:FRIENDS_WITH]->()        // not reverse the friendship direction - someone to Klein
+RETURN u.name
+
+u.name
+"Klein"
+
+// both direction friendship -  kate has a friend Klein
+MATCH (klein:User {name: "Klein"})-[:FRIENDS_WITH]-(friend)
+RETURN friend.name
+
+friend.name
+"Kate"
+
+// one direction - no friends
+MATCH (klein:User {name: "Klein"})-[:FRIENDS_WITH]->(friend)     //
+RETURN friend.name
+
+----------
+
+//Most Popular Users (Degree Centrality)
+MATCH (u:User)-[:FRIENDS_WITH]->(friend)
+RETURN u.name, COUNT(friend) AS friend_count
+ORDER BY friend_count DESC
+
+u.name	friend_count
+"Hero"	2
+"Dunn"	2
+"Clive"	2
+"Sue"	1
+"Chi"	1
+"Thor"	1
+"Hicks"	1
+"Devin"	1
+"Kate"	1
+
+
+//Friend Recommendations (Common Friends)
+MATCH (u:User {name: "Hero"})-[:FRIENDS_WITH]->(friend)-[:FRIENDS_WITH]->(recommendation)        
+WHERE NOT (u)-[:FRIENDS_WITH]->(recommendation) AND (u) <> (recommendation)                          
+RETURN recommendation.name, COUNT(friend) as common_friends                                      
+ORDER BY common_friends
+
+recommendation.name	common_friends
+"Chi"	                    2
+
+// Add a New User
+CREATE (:User {id: 10, name: "Alex"})
+
+Added 1 label, created 1 node, set 2 properties, completed after 5 ms.
+
+//Add a New Friendship - UNIDIRECTIONAL RELATIONSHIP
+MATCH (a:User {name: "Hero"}), (b:User {name:"Alex"})                                                        
+CREATE (a)-[:FRIENDS_WITH]->(b)
+
+Created 1 relationship, completed after 6 ms.
+
+//Remove a Friendship
+MATCH (a:User {name: "Hero"})-[r:FRIENDS_WITH]->(b:User {name: "Dunn"}) 
+DELETE r
+
+Deleted 1 relationship, completed after 37 ms.
+
+
+// Indexing for Faster Queries
+CREATE INDEX FOR (u:User) ON (u.id, u.name)
+
+Added 1 index, completed after 96 ms.
+
+
+//Batch Import from CSV  --- THIS DID NOT WORK
+LOAD CSV WITH HEADERS FROM "http://localhost:8888/DATASCIENCE/DataScienceFromScratch/SCRATCH/users.csv" AS row
+CREATE (:User {id: toInteger(row.id), name: row.name})
+
+// if you made errors during load - how to delete ids
+MATCH (u:User) 
+WHERE u.id > 10 
+DETACH DELETE u
+
+// if NULL VALUES added mistakenly
+MATCH (u:User) 
+WHERE u.id IS NULL 
+DELETE u
+
+//copy the csv file to "import" folder in the neo4j installation, then run below command.
+LOAD CSV WITH HEADERS FROM "file:///users.csv" AS row
+CREATE (:User {id: toInteger(row.id), name: row.name})
+
+Added 7 labels, created 7 nodes, set 7 properties, completed after 25 ms.
+
+// see users
+MATCH (u:User) 
+return u.id, u.name 
+ORDER by u.id
+
+u.id	u.name
+0	"Hero"
+1	"Dunn"
+2	"Sue"
+3	"Chi"
+4	"Thor"
+5	"Clive"
+6	"Hicks"
+7	"Devin"
+8	"Kate"
+9	"Klein"
+10	"Alex"
+11	"Ravi"
+12	"Karl"
+13	"Tony"
+14	"Navin"
+15	"Rita"
+16	"David"
+17	"Lipa"
