@@ -1,0 +1,2 @@
+MATCH ()-[r:SIMILAR]-()
+DELETE r
