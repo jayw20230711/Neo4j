@@ -1,0 +1,502 @@
+
+<style>
+.wrap { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; }
+.sec { margin-bottom: 20px; }
+.sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-tertiary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+.node-card { border-radius: 8px; padding: 10px 12px; border: 0.5px solid var(--color-border-tertiary); }
+.node-title { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.node-props { font-size: 11px; color: var(--color-text-secondary); line-height: 1.8; font-family: var(--font-mono); }
+.badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+.b-key { background: var(--color-background-warning); color: var(--color-text-warning); }
+.b-idx { background: var(--color-background-info); color: var(--color-text-info); }
+.b-com { background: var(--color-background-success); color: var(--color-text-success); }
+.b-pii { background: var(--color-background-danger); color: var(--color-text-danger); }
+
+/* Node colors */
+.nc-claim    { background: rgba(229,62,62,.08);   border-color: rgba(229,62,62,.3);   }
+.nc-person   { background: rgba(99,102,241,.08);  border-color: rgba(99,102,241,.3);  }
+.nc-policy   { background: rgba(214,158,46,.08);  border-color: rgba(214,158,46,.3);  }
+.nc-provider { background: rgba(56,161,105,.08);  border-color: rgba(56,161,105,.3);  }
+.nc-vehicle  { background: rgba(9,135,160,.08);   border-color: rgba(9,135,160,.3);   }
+.nc-finance  { background: rgba(128,90,213,.08);  border-color: rgba(128,90,213,.3);  }
+.nc-org      { background: rgba(183,121,31,.08);  border-color: rgba(183,121,31,.3);  }
+.nc-system   { background: rgba(113,128,150,.08); border-color: rgba(113,128,150,.3); }
+
+.rel-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rel-table th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-tertiary); padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.rel-table td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); vertical-align: top; }
+.rel-table td:first-child { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-primary); white-space: nowrap; }
+.rel-table tr:last-child td { border-bottom: none; }
+
+.fraud-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fraud-table th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-tertiary); padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.fraud-table td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); font-size: 12px; }
+.fraud-table tr:last-child td { border-bottom: none; }
+.severity-H { color: #fc8181; font-weight: 600; }
+.severity-M { color: #f6ad55; font-weight: 600; }
+.severity-L { color: #68d391; font-weight: 600; }
+</style>
+
+<div class="wrap">
+
+<!-- CORE NODES -->
+<div class="sec">
+<div class="sec-title">Core Node Labels (24 total)</div>
+<div class="grid4">
+
+<div class="node-card nc-claim">
+<div class="node-title" style="color:#fc8181">Claim</div>
+<div class="node-props">
+claim_id <span class="badge b-key">KEY</span><br>
+master_claim_id<br>
+lob <span class="badge b-idx">IDX</span><br>
+fnol_date<br>
+incident_date<br>
+close_date<br>
+status <span class="badge b-idx">IDX</span><br>
+risk_score <span class="badge b-idx">IDX</span><br>
+component_id<br>
+community_id<br>
+siu_referred<br>
+payment_hold
+</div>
+</div>
+
+<div class="node-card nc-claim">
+<div class="node-title" style="color:#fc8181">ClaimVersion</div>
+<div class="node-props">
+version_id <span class="badge b-key">KEY</span><br>
+version_num<br>
+lob<br>
+business_unit<br>
+sub_lob<br>
+reserve_amount<br>
+paid_amount<br>
+status<br>
+adjuster_id<br>
+created_date<br>
+source_system
+</div>
+</div>
+
+<div class="node-card nc-claim">
+<div class="node-title" style="color:#fc8181">CoverageLine</div>
+<div class="node-props">
+coverage_id <span class="badge b-key">KEY</span><br>
+type (BI/PD/MedPay<br>
+  UM/UIM/PIP/<br>
+  WC/Disability)<br>
+limit_amount<br>
+deductible<br>
+paid_amount<br>
+reserve_amount<br>
+status
+</div>
+</div>
+
+<div class="node-card nc-claim">
+<div class="node-title" style="color:#fc8181">ClaimPayment</div>
+<div class="node-props">
+payment_id <span class="badge b-key">KEY</span><br>
+amount<br>
+payment_date<br>
+payment_type<br>
+payee_id<br>
+bank_account<br>
+check_number<br>
+voided<br>
+source_system
+</div>
+</div>
+
+<div class="node-card nc-person">
+<div class="node-title" style="color:#a5b4fc">Person</div>
+<div class="node-props">
+person_id <span class="badge b-key">KEY</span><br>
+full_name <span class="badge b-idx">IDX</span><br>
+dob <span class="badge b-pii">PII</span><br>
+ssn_last4 <span class="badge b-pii">PII</span><br>
+gender<br>
+phone_normalized <span class="badge b-idx">IDX</span><br>
+email<br>
+role_flags<br>
+claim_count <span class="badge b-idx">IDX</span><br>
+risk_score<br>
+community_id<br>
+watchlist_flag
+</div>
+</div>
+
+<div class="node-card nc-person">
+<div class="node-title" style="color:#a5b4fc">Employee</div>
+<div class="node-props">
+employee_id <span class="badge b-key">KEY</span><br>
+person_id (→Person)<br>
+employer_id<br>
+hire_date<br>
+termination_date<br>
+department<br>
+job_title<br>
+salary_band<br>
+wc_class_code<br>
+benefits_eligible<br>
+active_flag
+</div>
+</div>
+
+<div class="node-card nc-person">
+<div class="node-title" style="color:#a5b4fc">Dependent</div>
+<div class="node-props">
+dependent_id <span class="badge b-key">KEY</span><br>
+person_id (→Person)<br>
+employee_id<br>
+relationship<br>
+dob <span class="badge b-pii">PII</span><br>
+enrollment_date<br>
+termination_date<br>
+eligibility_flag<br>
+verification_date
+</div>
+</div>
+
+<div class="node-card nc-policy">
+<div class="node-title" style="color:#f6e05e">Policy</div>
+<div class="node-props">
+policy_id <span class="badge b-key">KEY</span><br>
+policy_number <span class="badge b-idx">IDX</span><br>
+lob<br>
+inception_date<br>
+expiry_date<br>
+premium<br>
+status<br>
+state<br>
+territory<br>
+carrier_code<br>
+agent_id<br>
+cancellation_date
+</div>
+</div>
+
+<div class="node-card nc-vehicle">
+<div class="node-title" style="color:#76e4f7">Vehicle</div>
+<div class="node-props">
+vin <span class="badge b-key">KEY</span><br>
+plate <span class="badge b-idx">IDX</span><br>
+make / model / year<br>
+state_registered<br>
+total_loss_flag<br>
+salvage_title<br>
+prior_claim_count<br>
+odometer<br>
+fleet_id
+</div>
+</div>
+
+<div class="node-card nc-vehicle">
+<div class="node-title" style="color:#76e4f7">Fleet</div>
+<div class="node-props">
+fleet_id <span class="badge b-key">KEY</span><br>
+company_id<br>
+fleet_name<br>
+vehicle_count<br>
+state<br>
+dot_number<br>
+claim_count<br>
+risk_score
+</div>
+</div>
+
+<div class="node-card nc-provider">
+<div class="node-title" style="color:#68d391">MedicalProvider</div>
+<div class="node-props">
+npi <span class="badge b-key">KEY</span><br>
+name <span class="badge b-idx">IDX</span><br>
+specialty<br>
+license_number<br>
+tax_id<br>
+address_id<br>
+phone<br>
+claim_count <span class="badge b-idx">IDX</span><br>
+billing_anomaly_score<br>
+pagerank_score
+</div>
+</div>
+
+<div class="node-card nc-provider">
+<div class="node-title" style="color:#68d391">MedicalBill</div>
+<div class="node-props">
+bill_id <span class="badge b-key">KEY</span><br>
+npi<br>
+cpt_codes<br>
+icd10_codes<br>
+billed_amount<br>
+allowed_amount<br>
+paid_amount<br>
+service_date<br>
+duplicate_flag<br>
+upcoding_flag
+</div>
+</div>
+
+<div class="node-card nc-org">
+<div class="node-title" style="color:#fbd38d">RepairShop</div>
+<div class="node-props">
+shop_id <span class="badge b-key">KEY</span><br>
+name <span class="badge b-idx">IDX</span><br>
+tax_id<br>
+license_number<br>
+dba_name<br>
+address_id<br>
+claim_count <span class="badge b-idx">IDX</span><br>
+avg_invoice<br>
+inflation_score<br>
+pagerank_score
+</div>
+</div>
+
+<div class="node-card nc-org">
+<div class="node-title" style="color:#fbd38d">Attorney</div>
+<div class="node-props">
+bar_id <span class="badge b-key">KEY</span><br>
+name<br>
+firm_name<br>
+state_bar<br>
+address_id<br>
+specialization<br>
+claim_count <span class="badge b-idx">IDX</span><br>
+avg_settlement<br>
+pagerank_score
+</div>
+</div>
+
+<div class="node-card nc-org">
+<div class="node-title" style="color:#fbd38d">TowCompany</div>
+<div class="node-props">
+company_id <span class="badge b-key">KEY</span><br>
+name<br>
+dot_number<br>
+address_id<br>
+service_area_zip<br>
+preferred_shop_id<br>
+claim_count<br>
+referral_score
+</div>
+</div>
+
+<div class="node-card nc-org">
+<div class="node-title" style="color:#fbd38d">Employer</div>
+<div class="node-props">
+employer_id <span class="badge b-key">KEY</span><br>
+company_name<br>
+fein <span class="badge b-pii">PII</span><br>
+naics_code<br>
+state<br>
+employee_count<br>
+wc_mod_factor<br>
+claim_count<br>
+risk_score
+</div>
+</div>
+
+<div class="node-card nc-system">
+<div class="node-title" style="color:#a0aec0">Address</div>
+<div class="node-props">
+address_id <span class="badge b-key">KEY</span><br>
+street<br>
+city<br>
+state<br>
+zip <span class="badge b-idx">IDX</span><br>
+lat / lon<br>
+county<br>
+no_fault_state<br>
+pip_state<br>
+territory_code
+</div>
+</div>
+
+<div class="node-card nc-system">
+<div class="node-title" style="color:#a0aec0">Phone</div>
+<div class="node-props">
+number <span class="badge b-key">KEY</span><br>
+normalized<br>
+carrier<br>
+line_type (mobile/<br>
+  landline/voip)<br>
+reputation_score<br>
+claim_count <span class="badge b-idx">IDX</span><br>
+first_seen<br>
+last_seen
+</div>
+</div>
+
+<div class="node-card nc-system">
+<div class="node-title" style="color:#a0aec0">CrossSystemID</div>
+<div class="node-props">
+xref_id <span class="badge b-key">KEY</span><br>
+source_system<br>
+source_id<br>
+entity_type<br>
+master_id<br>
+created_date<br>
+confidence_score
+</div>
+</div>
+
+<div class="node-card nc-system">
+<div class="node-title" style="color:#a0aec0">Adjuster</div>
+<div class="node-props">
+adjuster_id <span class="badge b-key">KEY</span><br>
+name<br>
+license_number<br>
+state_licensed<br>
+specialization<br>
+claim_count<br>
+avg_cycle_time<br>
+siu_referral_rate
+</div>
+</div>
+
+<div class="node-card nc-finance">
+<div class="node-title" style="color:#d6bcfa">BankAccount</div>
+<div class="node-props">
+account_id <span class="badge b-key">KEY</span><br>
+routing_number<br>
+account_last4 <span class="badge b-pii">PII</span><br>
+bank_name<br>
+account_type<br>
+person_count<br>
+payment_count<br>
+fraud_flag
+</div>
+</div>
+
+<div class="node-card nc-finance">
+<div class="node-title" style="color:#d6bcfa">LitigationEvent</div>
+<div class="node-props">
+litigation_id <span class="badge b-key">KEY</span><br>
+claim_id<br>
+filed_date<br>
+court<br>
+jurisdiction<br>
+attorney_id<br>
+demand_amount<br>
+settlement_amount<br>
+status
+</div>
+</div>
+
+<div class="node-card nc-finance">
+<div class="node-title" style="color:#d6bcfa">InjuryRecord</div>
+<div class="node-props">
+injury_id <span class="badge b-key">KEY</span><br>
+person_id<br>
+claim_id<br>
+body_part<br>
+injury_type<br>
+icd10_code<br>
+disability_rating<br>
+ime_doctor_id<br>
+rtw_date<br>
+max_medical_flag
+</div>
+</div>
+
+<div class="node-card nc-system">
+<div class="node-title" style="color:#a0aec0">FraudRing</div>
+<div class="node-props">
+ring_id <span class="badge b-key">KEY</span><br>
+ring_type<br>
+detected_date<br>
+status (active/<br>
+  dormant/closed)<br>
+member_count<br>
+total_exposure<br>
+lob<br>
+geographic_area<br>
+detection_method
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- RELATIONSHIPS -->
+<div class="sec">
+<div class="sec-title">Key Relationship Types (32 total)</div>
+<table class="rel-table">
+<thead><tr><th>Relationship</th><th>From → To</th><th>Key Properties</th><th>Fraud Signal</th></tr></thead>
+<tbody>
+<tr><td>HAS_VERSION</td><td>Claim → ClaimVersion</td><td>version_num, created_date</td><td>Rapid reserve changes</td></tr>
+<tr><td>HAS_COVERAGE</td><td>Claim → CoverageLine</td><td>coverage_type, limit</td><td>Coverage stacking</td></tr>
+<tr><td>HAS_PAYMENT</td><td>Claim → ClaimPayment</td><td>amount, date, payee</td><td>Duplicate payments</td></tr>
+<tr><td>FILED_BY</td><td>Claim → Person</td><td>role, filed_date</td><td>Serial filers</td></tr>
+<tr><td>INVOLVED_IN</td><td>Person → Claim</td><td>role, injury_flag</td><td>Participant recycling</td></tr>
+<tr><td>INSURED_UNDER</td><td>Claim → Policy</td><td>policy_id, lob</td><td>Policy inception fraud</td></tr>
+<tr><td>REPAIRED_AT</td><td>Claim → RepairShop</td><td>invoice_amount, date</td><td>Shop clustering</td></tr>
+<tr><td>TREATED_BY</td><td>Claim → MedicalProvider</td><td>npi, bill_amount</td><td>Medical mill</td></tr>
+<tr><td>HAS_BILL</td><td>Claim → MedicalBill</td><td>cpt_codes, amount</td><td>Upcoding, duplicates</td></tr>
+<tr><td>REPRESENTED_BY</td><td>Claim → Attorney</td><td>retained_date, demand</td><td>Attorney rings</td></tr>
+<tr><td>INVOLVES_VEHICLE</td><td>Claim → Vehicle</td><td>damage_desc, role</td><td>VIN cloning</td></tr>
+<tr><td>USES_PHONE</td><td>Person → Phone</td><td>first_used, last_used</td><td>Phone reputation</td></tr>
+<tr><td>LIVES_AT</td><td>Person → Address</td><td>from_date, to_date</td><td>Address fraud</td></tr>
+<tr><td>INCIDENT_AT</td><td>Claim → Address</td><td>incident_date</td><td>Geographic clustering</td></tr>
+<tr><td>EMPLOYED_BY</td><td>Person → Employer</td><td>hire_date, term_date</td><td>Phantom employee</td></tr>
+<tr><td>HAS_INJURY</td><td>Claim → InjuryRecord</td><td>body_part, icd10</td><td>Injury exaggeration</td></tr>
+<tr><td>HAS_LITIGATION</td><td>Claim → LitigationEvent</td><td>filed_date, demand</td><td>Litigation mills</td></tr>
+<tr><td>REFERRED_TO</td><td>TowCompany → RepairShop</td><td>referral_count</td><td>Tow+shop pipeline</td></tr>
+<tr><td>PAID_TO</td><td>ClaimPayment → BankAccount</td><td>amount, date</td><td>Account reuse</td></tr>
+<tr><td>MEMBER_OF</td><td>Person → FraudRing</td><td>role, join_date</td><td>Ring membership</td></tr>
+<tr><td>XREF_ID</td><td>Any → CrossSystemID</td><td>source, confidence</td><td>Identity dedup</td></tr>
+<tr><td>SHARES_PHONE</td><td>Claim → Claim</td><td>phone, strength</td><td>Computed link</td></tr>
+<tr><td>SHARES_PROVIDER</td><td>Claim → Claim</td><td>npi, days_apart</td><td>Computed link</td></tr>
+<tr><td>SHARES_SHOP</td><td>Claim → Claim</td><td>shop_id, days_apart</td><td>Computed link</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- FRAUD PATTERNS -->
+<div class="sec">
+<div class="sec-title">15 Fraud Patterns — LOB Mapping</div>
+<table class="fraud-table">
+<thead><tr><th>Pattern</th><th>LOB</th><th>Graph Signal</th><th>Severity</th></tr></thead>
+<tbody>
+<tr><td>Staged accident network</td><td>Auto, Fleet</td><td>Shared participants + shop + doctor within 30 days</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Medical mill</td><td>Auto PIP, WC</td><td>1 doctor → 50+ claims, identical CPT codes, max billing</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Tow + attorney + shop pipeline</td><td>Auto</td><td>TowCompany → RepairShop ← Attorney all same ring</td><td class="severity-H">HIGH</td></tr>
+<tr><td>VIN cloning / chop shop</td><td>Auto, Fleet</td><td>Same VIN on 2+ policies, total loss then re-registered</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Workers Comp fraud ring</td><td>WC</td><td>Multiple employees same employer, same IME doctor, same attorney</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Phantom employee (benefits)</td><td>Benefits, WC</td><td>Terminated employee still on active benefits, claims filed post-termination</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Property arson ring</td><td>Property, Flood</td><td>Multiple properties same owner or agent, accelerant pattern, prior claims</td><td class="severity-H">HIGH</td></tr>
+<tr><td>Cyber liability fraud</td><td>Cyber</td><td>Duplicate incident reports, inflated forensics invoices, related entities</td><td class="severity-M">MED</td></tr>
+<tr><td>D&O collusion</td><td>D&O, EPL</td><td>Same legal firm across multiple corporate entities, coordinated filing dates</td><td class="severity-M">MED</td></tr>
+<tr><td>Inflated repair estimates</td><td>Auto, Property</td><td>Shop avg invoice 3x market rate, same adjuster approving</td><td class="severity-M">MED</td></tr>
+<tr><td>Duplicate claim filing</td><td>All</td><td>Same incident_date + person + injury across 2+ claims</td><td class="severity-M">MED</td></tr>
+<tr><td>Post-loss policy inception</td><td>All</td><td>days_since_policy &lt; 30, high amount, first claim</td><td class="severity-M">MED</td></tr>
+<tr><td>Address fraud (rate shopping)</td><td>Auto, Property</td><td>Person address ≠ vehicle registration ≠ garaging address</td><td class="severity-L">LOW</td></tr>
+<tr><td>Exaggerated injury (soft tissue)</td><td>Auto, WC</td><td>No ER visit, delayed treatment onset, max chiropractic billing</td><td class="severity-L">LOW</td></tr>
+<tr><td>Dependent eligibility fraud</td><td>Benefits, HRA, HSA</td><td>Dependent age exceeded, divorced spouse still enrolled, claims post-termination</td><td class="severity-L">LOW</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- SOURCE SYSTEMS -->
+<div class="sec">
+<div class="sec-title">Cross-System ID Mapping (Hartford Carrier Model)</div>
+<table class="rel-table">
+<thead><tr><th>Source System</th><th>System ID Format</th><th>Master ID</th><th>Entity Type</th></tr></thead>
+<tbody>
+<tr><td>Claims Management (Guidewire)</td><td>CLM-2024-00123</td><td>claim_id (UUID)</td><td>Claim</td></tr>
+<tr><td>Policy Admin (Duck Creek)</td><td>POL-AUTO-CT-98765</td><td>policy_id (UUID)</td><td>Policy</td></tr>
+<tr><td>Medical Billing (TriZetto)</td><td>BILL-NPI-00456-2024</td><td>bill_id (UUID)</td><td>MedicalBill</td></tr>
+<tr><td>Finance / ERP (SAP)</td><td>PAY-TRX-SAP-789</td><td>payment_id (UUID)</td><td>ClaimPayment</td></tr>
+<tr><td>CRM (Salesforce)</td><td>SF-CONT-00112233</td><td>person_id (UUID)</td><td>Person</td></tr>
+<tr><td>HR / Benefits (Workday)</td><td>WD-EMP-445566</td><td>employee_id (UUID)</td><td>Employee</td></tr>
+<tr><td>WC TPA (Sedgwick)</td><td>SED-WC-CT-2024-999</td><td>claim_id (UUID)</td><td>Claim (WC)</td></tr>
+</tbody>
+</table>
+</div>
+
+</div>
