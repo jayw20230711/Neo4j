@@ -1,0 +1,278 @@
+# =============================================================================
+# FRAUD SCORING WEIGHTS — MASTER CONFIG
+# FraudGraph Enterprise | Hartford CT | Version 2.0
+# 14 LOBs | 3 Claim Architecture Groups | 21 Fraud Patterns
+# =============================================================================
+# HOW TO USE:
+#   - Weights: 0.0 to 1.0 multipliers applied to each fraud signal
+#   - Final fraud_score = sum(signal * weight) normalized to 0-100
+#   - Edit weights here; reload FastAPI without restarting Neo4j
+#   - Every change committed to Git with explanatory comment
+#   - Compliance auditors: see pii_policy section at bottom
+# =============================================================================
+# SCHEMA NOTE:
+#   All LOBs share the same Claim hub node.
+#   LOB-specific shape lives in ClaimVersion:
+#     (c:Claim)-[:HAS_VERSION]->(v:ClaimVersion {lob: "FLEET_AUTO"})
+#   Shared entity nodes: Person, Address, Phone, Attorney, BankAccount
+# =============================================================================
+
+metadata:
+  version: "2.0.0"
+  effective_date: "2025-01-01"
+  jurisdiction: "Hartford CT — CT, NY, NJ, MA rules apply"
+  carriers: ["Travelers", "Aetna", "The Hartford", "Cigna Reinsurance"]
+  lob_groups:
+    group1_pc: ["PROPERTY", "LIABILITY", "FLEET_AUTO", "UMBRELLA", "FLOOD", "CYBER", "EPL", "DO", "PROF_LIABILITY"]
+    group2_wc: ["WORKERS_COMP"]
+    group3_benefits: ["KEY_PERSON_LIFE", "DISABILITY", "HRA_HSA", "EMPLOYEE_BENEFITS"]
+  audit_trail: true
+
+# =============================================================================
+# GDS ALGORITHM WEIGHTS (shared across all LOBs)
+# =============================================================================
+gds_weights:
+  connected_components:
+    weight: 0.85
+    description: "Node shares connected component with confirmed fraud ring"
+  louvain_community:
+    weight: 0.75
+    description: "Node in dense Louvain community with fraud-flagged members"
+  pagerank:
+    weight: 0.70
+    description: "High PageRank = central actor in claim referral network"
+  betweenness_centrality:
+    weight: 0.65
+    description: "High betweenness = broker connecting separate fraud clusters"
+  temporal_wcc:
+    weight: 0.80
+    active: false
+    description: "Temporally-aware connected component — activate Phase 2"
+
+# =============================================================================
+# GROUP 1 — PROPERTY & CASUALTY (9 LOBs)
+# =============================================================================
+
+lob_property:
+  _lob_code: "PROPERTY"
+  _group: 1
+  _claimversion_shape: "property_damage_version"
+  _notes: "New England: nor'easters, ice dams, flooding — cross NOAA weather data"
+  arson_ring:           { weight: 0.93, description: "Multi-property claims sharing owner/agent/contractor node" }
+  flood_fraud:          { weight: 0.85, description: "Claimed damage inconsistent with NOAA event data" }
+  contractor_collusion: { weight: 0.80, description: "Repair estimates from adjuster-network contractor" }
+  contents_inflation:   { weight: 0.65, description: "High-value contents claim with no purchase documentation" }
+  post_loss_inception:  { weight: 0.55, threshold_days: 45, description: "Policy effective within 45 days of loss" }
+  phantom_treatment:    { weight: 0.75, description: "Repair billed with no contractor license or permit record" }
+  duplicate_billing:    { weight: 0.80, description: "Same damage billed to multiple carriers" }
+  claim_velocity:       { weight: 0.78, threshold_count: 2, threshold_days: 365, description: "2+ property claims in 12 months" }
+  identity_takeover:    { weight: 0.75, threshold_days: 30, description: "Owner contact info changed before large claim" }
+  cross_carrier_iso:    { weight: 0.88, description: "Same loss filed across multiple carriers" }
+  serial_claimant_iso:  { weight: 0.82, description: "Claimant with ISO cross-carrier history" }
+
+lob_liability:
+  _lob_code: "LIABILITY"
+  _group: 1
+  _claimversion_shape: "liability_version"
+  _notes: "GL, auto liability, premises — bodily injury and property damage"
+  medical_mill:         { weight: 0.90, threshold_claims: 50, description: "Provider treating >50 claimants from same liability event" }
+  cpt_upcoding:         { weight: 0.78, threshold_ratio: 1.4, description: "CPT billing above peer benchmark" }
+  phantom_treatment:    { weight: 0.88, description: "Medical bill with no facility record" }
+  attorney_pipeline:    { weight: 0.85, description: "Attorney referral inflating settlement values" }
+  claim_velocity:       { weight: 0.80, threshold_count: 3, threshold_days: 90, description: "3+ claims in 90 days same claimant" }
+  impossible_timeline:  { weight: 0.95, description: "Treatment date predates reported incident" }
+  synthetic_identity:   { weight: 0.90, description: "Claimant identity shows synthetic markers" }
+  cross_carrier_iso:    { weight: 0.91, description: "Same incident filed across multiple carriers" }
+  serial_claimant_iso:  { weight: 0.87, description: "Claimant known across ISO carrier network" }
+  adjuster_collusion:   { weight: 0.88, threshold_approval_rate: 0.95, description: "Adjuster anomalous approval rate" }
+
+lob_fleet_auto:
+  _lob_code: "FLEET_AUTO"
+  _group: 1
+  _claimversion_shape: "fleet_auto_version"
+  _notes: "Commercial fleet — cross-reference Vehicle, Fleet, Driver nodes"
+  medical_mill:         { weight: 0.92, threshold_claims: 50, description: "1 provider treating >50 fleet accident claimants" }
+  phantom_passenger:    { weight: 0.85, description: "Passenger recycled across unrelated fleet accidents" }
+  impossible_timeline:  { weight: 0.95, description: "Treatment before reported fleet incident" }
+  claim_velocity:       { weight: 0.82, threshold_count: 3, threshold_days: 90, description: "3+ claims from same vehicle in 90 days" }
+  cpt_upcoding:         { weight: 0.75, threshold_ratio: 1.4, description: "Fleet injury billing above peer benchmark" }
+  adjuster_collusion:   { weight: 0.88, threshold_approval_rate: 0.95, description: "Fleet adjuster anomalous shop approval rate" }
+  contractor_collusion: { weight: 0.78, description: "Fleet repairs routed to adjuster-network shop" }
+  cross_carrier_iso:    { weight: 0.89, description: "Same fleet incident filed at multiple carriers" }
+  address_fraud:        { weight: 0.55, description: "Vehicle garaging address inconsistent with territory" }
+  arson_ring:           { weight: 0.88, description: "Multiple fleet vehicles total-loss same period" }
+
+lob_umbrella:
+  _lob_code: "UMBRELLA"
+  _group: 1
+  _claimversion_shape: "umbrella_version"
+  _notes: "Excess layer — watch for manufactured underlying limit exhaustion"
+  manufactured_exhaustion: { weight: 0.90, description: "Underlying limit exhausted suspiciously fast to trigger umbrella" }
+  attorney_pipeline:        { weight: 0.88, description: "Attorney pattern inflating claims to umbrella layer" }
+  synthetic_identity:       { weight: 0.85, description: "Umbrella claimant identity shows synthetic markers" }
+  cross_carrier_iso:        { weight: 0.87, description: "Same incident triggering umbrella at multiple carriers" }
+  serial_claimant_iso:      { weight: 0.84, description: "Umbrella claimant known in ISO network" }
+  claim_velocity:           { weight: 0.75, threshold_count: 2, threshold_days: 365, description: "2+ umbrella triggers same insured in 12 months" }
+
+lob_flood:
+  _lob_code: "FLOOD"
+  _group: 1
+  _claimversion_shape: "flood_version"
+  _notes: "NFIP + private flood — cross NOAA/FEMA event data mandatory"
+  flood_fraud:          { weight: 0.90, description: "Claimed flood damage without matching NOAA/FEMA event" }
+  pre_existing_damage:  { weight: 0.85, description: "Damage pattern predates reported flood event" }
+  contractor_collusion: { weight: 0.80, description: "Flood remediation billed by adjuster-network contractor" }
+  contents_inflation:   { weight: 0.68, description: "Contents claimed without supporting documentation" }
+  post_loss_inception:  { weight: 0.60, threshold_days: 45, description: "Flood policy effective within 45 days of event" }
+  cross_carrier_iso:    { weight: 0.85, description: "Same flood event filed across carriers" }
+  claim_velocity:       { weight: 0.72, threshold_count: 2, threshold_days: 730, description: "2+ flood claims in 2 years same property" }
+
+lob_cyber:
+  _lob_code: "CYBER"
+  _group: 1
+  _claimversion_shape: "cyber_version"
+  _notes: "Cyber — forensic vendor, ransom payment, business interruption fraud"
+  phantom_incident:       { weight: 0.88, description: "Cyber incident claimed with no forensic evidence" }
+  vendor_collusion:       { weight: 0.85, description: "Forensic vendor in insured network inflating remediation costs" }
+  bi_inflation:           { weight: 0.80, description: "Business interruption loss inflated beyond actual revenue" }
+  ransom_fraud:           { weight: 0.90, description: "Ransom payment claimed but no third-party confirmation" }
+  post_loss_inception:    { weight: 0.70, threshold_days: 60, description: "Cyber policy effective within 60 days of incident" }
+  cross_carrier_iso:      { weight: 0.82, description: "Same cyber event filed across multiple carriers" }
+  serial_claimant_iso:    { weight: 0.78, description: "Insured with prior cyber claim history across carriers" }
+
+lob_epl:
+  _lob_code: "EPL"
+  _group: 1
+  _claimversion_shape: "epl_version"
+  _notes: "Wrongful termination, harassment, discrimination — watch collusive claimant groups"
+  collusive_claimants:    { weight: 0.85, description: "Multiple EPL claimants sharing attorney in coordinated filing" }
+  attorney_pipeline:      { weight: 0.82, description: "Attorney filing EPL claims against same employer" }
+  manufactured_claim:     { weight: 0.78, description: "EPL claim filed immediately after adverse employment action" }
+  serial_claimant_iso:    { weight: 0.75, description: "Claimant with EPL history across multiple employers" }
+  claim_velocity:         { weight: 0.70, threshold_count: 2, threshold_days: 365, description: "2+ EPL claims same employer in 12 months" }
+
+lob_do:
+  _lob_code: "DO"
+  _group: 1
+  _claimversion_shape: "do_version"
+  _notes: "D&O — securities claims, derivative suits, coordinated shareholder actions"
+  coordinated_action:       { weight: 0.82, description: "Multiple D&O claims from coordinated shareholder group" }
+  attorney_pipeline:        { weight: 0.80, description: "Same law firm filing D&O actions against multiple insureds" }
+  manufactured_exhaustion:  { weight: 0.85, description: "Side A/B/C layer exhaustion pattern suggests collusion" }
+  serial_claimant_iso:      { weight: 0.72, description: "Named director with D&O claim history across companies" }
+
+lob_prof_liability:
+  _lob_code: "PROF_LIABILITY"
+  _group: 1
+  _claimversion_shape: "prof_liability_version"
+  _notes: "E&O, malpractice — medical, legal, accounting professional liability"
+  medical_mill:         { weight: 0.88, threshold_claims: 20, description: "Provider with disproportionate malpractice claim volume" }
+  attorney_pipeline:    { weight: 0.85, description: "Attorney filing disproportionate claims against specific providers" }
+  claim_velocity:       { weight: 0.78, threshold_count: 2, threshold_days: 365, description: "2+ malpractice claims same provider in 12 months" }
+  phantom_treatment:    { weight: 0.82, description: "Malpractice claimed for treatment with no facility record" }
+  cross_carrier_iso:    { weight: 0.80, description: "Same professional error filed across multiple carriers" }
+
+# =============================================================================
+# GROUP 2 — WORKERS COMPENSATION (1 LOB)
+# =============================================================================
+
+lob_workers_comp:
+  _lob_code: "WORKERS_COMP"
+  _group: 2
+  _claimversion_shape: "wc_version"
+  _notes: "CT: 75% wage replacement cap. NY: schedule loss of use. IME doctor network tracked."
+  medical_mill:         { weight: 0.90, threshold_claims: 30, description: "WC provider treating disproportionate share of same employer claims" }
+  cpt_upcoding:         { weight: 0.80, threshold_ratio: 1.35, description: "WC CPT billing above state fee schedule peer benchmark" }
+  phantom_treatment:    { weight: 0.85, description: "WC medical bill with no employer incident report correlation" }
+  impossible_timeline:  { weight: 0.95, description: "Treatment date predates employer-reported incident" }
+  claim_velocity:       { weight: 0.70, threshold_count: 2, threshold_days: 180, description: "2+ WC claims same employee in 6 months" }
+  reserve_escalation:   { weight: 0.72, threshold_pct: 0.40, description: "WC reserve escalating — possible disability exaggeration" }
+  adjuster_collusion:   { weight: 0.85, threshold_approval_rate: 0.92, description: "WC adjuster anomalous approval rate for specific provider" }
+  attorney_pipeline:    { weight: 0.78, description: "WC attorney inflating disability duration" }
+  synthetic_identity:   { weight: 0.88, description: "WC claimant identity shows synthetic markers" }
+  cross_carrier_iso:    { weight: 0.93, description: "Same WC injury filed across multiple employers/carriers" }
+  serial_claimant_iso:  { weight: 0.85, description: "WC claimant with ISO history across multiple employers" }
+  ime_collusion:        { weight: 0.80, description: "IME doctor consistently ruling for one side — adjuster referral pattern" }
+  return_to_work_fraud: { weight: 0.75, description: "Claimant working elsewhere while collecting WC disability" }
+
+# =============================================================================
+# GROUP 3 — EMPLOYEE BENEFITS & LIFE (4 LOBs)
+# Primary patterns: billing fraud, eligibility fraud, phantom employees
+# =============================================================================
+
+lob_key_person_life:
+  _lob_code: "KEY_PERSON_LIFE"
+  _group: 3
+  _claimversion_shape: "life_version"
+  _notes: "Insurable interest verification critical — watch for phantom key person"
+  phantom_insured:        { weight: 0.93, description: "Key person life policy on non-existent or departed employee" }
+  eligibility_fraud:      { weight: 0.88, description: "Insured no longer employed at time of claim" }
+  policy_lapse_reinstate: { weight: 0.80, description: "Policy lapsed/reinstated before death claim" }
+  post_loss_inception:    { weight: 0.85, threshold_days: 90, description: "Key person policy effective within 90 days of death" }
+  beneficiary_fraud:      { weight: 0.78, description: "Beneficiary change within 30 days of death" }
+
+lob_disability:
+  _lob_code: "DISABILITY"
+  _group: 3
+  _claimversion_shape: "disability_version"
+  _notes: "STD/LTD — coordinate with WC; dual collection is key signal"
+  dual_collection:        { weight: 0.92, description: "Claimant collecting disability + WC simultaneously" }
+  phantom_treatment:      { weight: 0.85, description: "Disability claim with no supporting medical records" }
+  return_to_work_fraud:   { weight: 0.88, description: "Claimant working elsewhere while on disability" }
+  claim_velocity:         { weight: 0.75, threshold_count: 2, threshold_days: 730, description: "2+ disability claims in 2 years same claimant" }
+  ime_collusion:          { weight: 0.80, description: "IME doctor pattern consistently extending disability duration" }
+  eligibility_fraud:      { weight: 0.85, description: "Claimant not eligible for coverage at time of claim" }
+  serial_claimant_iso:    { weight: 0.82, description: "Disability claimant known across carrier ISO network" }
+
+lob_hra_hsa:
+  _lob_code: "HRA_HSA"
+  _group: 3
+  _claimversion_shape: "hra_hsa_version"
+  _notes: "Health reimbursement/savings accounts — small-dollar high-volume fraud"
+  phantom_expense:        { weight: 0.90, description: "Reimbursement claimed for non-existent medical expense" }
+  duplicate_billing:      { weight: 0.85, description: "Same expense submitted to HRA + insurance carrier" }
+  ineligible_expense:     { weight: 0.78, description: "Non-qualifying expense submitted for reimbursement" }
+  claim_velocity:         { weight: 0.70, threshold_count: 10, threshold_days: 30, description: "10+ HRA/HSA claims in 30 days same employee" }
+  eligibility_fraud:      { weight: 0.82, description: "Reimbursement claimed for non-enrolled dependent" }
+
+lob_employee_benefits:
+  _lob_code: "EMPLOYEE_BENEFITS"
+  _group: 3
+  _claimversion_shape: "benefits_version"
+  _notes: "Group health, dental, vision — phantom employee and dependent eligibility are primary patterns"
+  phantom_employee:       { weight: 0.95, description: "Benefits claimed for non-existent employee on payroll" }
+  phantom_dependent:      { weight: 0.90, description: "Benefits claimed for ineligible or non-existent dependent" }
+  eligibility_fraud:      { weight: 0.88, description: "Employee no longer active but still enrolled" }
+  medical_mill:           { weight: 0.85, threshold_claims: 40, description: "Provider billing disproportionate group plan claims" }
+  cpt_upcoding:           { weight: 0.78, threshold_ratio: 1.35, description: "Group plan CPT billing above peer benchmark" }
+  duplicate_billing:      { weight: 0.82, description: "Same claim billed to group plan + individual carrier" }
+  phantom_treatment:      { weight: 0.85, description: "Group plan claim with no facility or provider record" }
+  claim_velocity:         { weight: 0.72, threshold_count: 5, threshold_days: 90, description: "5+ benefits claims same employee in 90 days" }
+
+# =============================================================================
+# SCORE THRESHOLDS — ALERT ROUTING (all LOBs)
+# =============================================================================
+thresholds:
+  green:  { max: 30,           action: "auto_approve_eligible",       description: "Low risk — standard STP processing" }
+  yellow: { min: 30, max: 60,  action: "enhanced_review",             description: "Moderate risk — assign senior adjuster" }
+  orange: { min: 60, max: 80,  action: "siu_referral",                description: "High risk — SIU referral within 24 hours" }
+  red:    { min: 80, max: 100, action: "payment_hold_siu_immediate",  description: "Critical — payment hold + SIU + ISO notification" }
+
+# =============================================================================
+# PII POLICY — GDPR + CCPA COMPLIANCE
+# Do not modify without legal approval
+# =============================================================================
+pii_policy:
+  ssn_full:             "NEVER_STORED — excluded at ingestion"
+  ssn_last4:            "HASHED — SHA-256, stored as ssn_hash on Person node"
+  full_name:            "STORED — required for entity resolution"
+  dob_full:             "HASHED — SHA-256, stored as dob_hash on Person node"
+  dob_year:             "STORED — scoring only"
+  phone:                "NORMALIZED_AND_STORED — core fraud signal"
+  email:                "HASHED — SHA-256"
+  bank_account_full:    "NEVER_STORED"
+  bank_account_last4:   "STORED — on BankAccount node"
+  address_street:       "EXCLUDED — not stored"
+  address_zip4:         "STORED — ZIP+4 for territory and geo clustering"
+  data_retention_years: 7
+  right_to_erasure:     "pseudonymization — hashed fields rotatable per GDPR Art.17"
